@@ -1,4 +1,3 @@
-
 name: Build Mali APK
 
 on:
@@ -28,9 +27,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Install Android packages
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        with:
+          packages: |
+            platform-tools
+            platforms;android-36
+            build-tools;36.0.0
 
       - name: Extract project
         run: unzip -q Mali-Android-3.1.1-source-fixed.zip -d source
@@ -45,3 +46,4 @@ jobs:
           name: Mali-APK
           path: source/Mali-Android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
