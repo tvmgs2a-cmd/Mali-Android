@@ -1,0 +1,40 @@
+name: Build Mali APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Extract project
+        run: unzip -q Mali-Android-3.1.0-source.zip -d source
+      - name: Build APK
+        working-directory: source/Mali-Android
+        run: gradle testDebugUnitTest assembleDebug --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mali-debug-apk
+          path: source/Mali-Android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
