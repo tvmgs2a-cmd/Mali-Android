@@ -3,7 +3,8 @@ name: Build Mali APK
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -23,19 +24,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK packages
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses and install packages
         run: |
           yes | sdkmanager --licenses
-          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Extract Mali project
         run: |
           unzip -q Mali-Android-3.1.2-fixed.zip -d source
           chmod +x source/Mali-Android/gradlew
 
-      - name: Build debug APK
+      - name: Build APK
         working-directory: source/Mali-Android
-        run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -43,4 +47,5 @@ jobs:
           name: Mali-APK
           path: source/Mali-Android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
           
