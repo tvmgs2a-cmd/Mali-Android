@@ -1,8 +1,10 @@
+
 name: Build Mali APK
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -23,22 +25,35 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools'
+        uses: android-actions/setup-android@v3
 
-      - name: Install Android packages
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install Android SDK packages
         run: |
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Check project ZIP
+        run: |
+          test -f Mali-Android-3.1.2-fixed.zip
 
       - name: Extract Mali project
         run: |
           unzip -q Mali-Android-3.1.2-fixed.zip -d source
-          chmod +x source/Mali-Android/gradlew
+          test -f source/Mali-Android/app/build.gradle.kts
 
       - name: Build APK
         working-directory: source/Mali-Android
-        run: ./gradlew --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
